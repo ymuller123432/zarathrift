@@ -186,6 +186,17 @@ export async function saveCustomerNote(phone: string, name: string, notes: strin
 }
 
 export async function getRegisteredUsers(): Promise<any[]> {
+  if (isUsingSupabase && supabase) {
+    try {
+      const { data } = await supabase.from('users').select('*');
+      return (data || []).map((u: any) => ({
+        phone: u.phone,
+        name: `${u.first_name} ${u.last_name}`.trim(),
+        email: u.email || '',
+        registeredAt: u.created_at,
+      }));
+    } catch (e) { console.warn('Supabase getRegisteredUsers failed', e); }
+  }
   if (typeof window === 'undefined') return [];
   try {
     const saved = localStorage.getItem('zarathrift_users');
@@ -200,6 +211,24 @@ export async function getRegisteredUsers(): Promise<any[]> {
   } catch {
     return [];
   }
+}
+
+export async function saveRegisteredUser(user: any) {
+  if (isUsingSupabase && supabase) {
+    try {
+      await supabase.from('users').upsert({
+        id: user.id,
+        first_name: user.firstName,
+        last_name: user.lastName,
+        phone: user.phone,
+        email: user.email,
+        password: user.password, // demo only
+        created_at: user.createdAt,
+      });
+      return;
+    } catch (e) { console.warn('Supabase saveRegisteredUser failed', e); }
+  }
+  // local save is handled in auth.ts
 }
 
 // ==================== CONTENT (Homepage) ====================

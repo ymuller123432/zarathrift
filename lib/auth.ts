@@ -1,10 +1,22 @@
 import { User } from './types';
+import { supabase, isUsingSupabase } from './supabase';
 
 const USERS_KEY = 'zarathrift_users';
 const CURRENT_USER_KEY = 'zarathrift_current_user';
 
-// LocalStorage helpers (demo mode)
+// LocalStorage helpers (demo mode) + Supabase support
 function getUsers(): User[] {
+  if (isUsingSupabase && supabase) {
+    // Note: for full real-time, this should be async. For now, we use local cache + fallback.
+    // Admin uses getRegisteredUsers which is async and Supabase-first.
+    // Login/register will still work mostly on local for demo, but Supabase save happens on register.
+    try {
+      const saved = localStorage.getItem(USERS_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  }
   if (typeof window === 'undefined') return [];
   try {
     const saved = localStorage.getItem(USERS_KEY);
@@ -102,8 +114,9 @@ export async function register(data: {
   // Also register in admin CRM so they can be messaged for marketing (new products/sales)
   try {
     // Dynamic import to avoid circular deps
-    import('./data').then(({ saveCustomerNote }) => {
+    import('./data').then(({ saveCustomerNote, saveRegisteredUser }) => {
       saveCustomerNote(normalizedPhone, `${data.firstName} ${data.lastName}`.trim(), '', 0);
+      saveRegisteredUser(newUser);
     });
   } catch {}
 

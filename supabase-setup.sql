@@ -63,6 +63,17 @@ create table if not exists customers (
   orders_count integer default 0
 );
 
+-- Registered Users (for admin CRM and WhatsApp marketing)
+create table if not exists users (
+  id text primary key,
+  first_name text,
+  last_name text,
+  phone text unique not null,
+  email text,
+  password text, -- demo only - plain text. Use Supabase Auth or hash in production
+  created_at timestamp default now()
+);
+
 -- Discounts (can also be stored under settings key 'discounts')
 create table if not exists discounts (
   code text primary key,
@@ -97,6 +108,9 @@ create policy "Allow anon insert/update settings" on settings for all using (tru
 -- Similar for others
 create policy "Allow anon read customers" on customers for select using (true);
 create policy "Allow anon insert/update customers" on customers for all using (true);
+
+create policy "Allow anon read users" on users for select using (true);
+create policy "Allow anon insert/update users" on users for all using (true);
 
 create policy "Allow anon read discounts" on discounts for select using (true);
 create policy "Allow anon insert/update discounts" on discounts for all using (true);
