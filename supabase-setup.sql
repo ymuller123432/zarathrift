@@ -129,12 +129,21 @@ create policy "Allow anon insert/update content" on content for all using (true)
 --   Click it / Edit / "Add tables" / toggle the "orders" table ON.
 --   (You may need to search or scroll to find the table list.)
 --
--- Fallback - just run this SQL in the SQL Editor:
-ALTER PUBLICATION supabase_realtime ADD TABLE IF NOT EXISTS orders;
+-- Fallback - run this in the SQL Editor (IF NOT EXISTS is NOT supported for publications):
+DO $$
+BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE orders;
+EXCEPTION WHEN duplicate_object THEN
+    RAISE NOTICE 'Table "orders" is already a member of publication "supabase_realtime"';
+END $$;
 
 -- You can also enable other tables for realtime if needed:
--- ALTER PUBLICATION supabase_realtime ADD TABLE products;
--- ALTER PUBLICATION supabase_realtime ADD TABLE settings;
+-- DO $$
+-- BEGIN
+--     ALTER PUBLICATION supabase_realtime ADD TABLE products;
+-- EXCEPTION WHEN duplicate_object THEN
+--     RAISE NOTICE 'Table "products" is already a member of publication "supabase_realtime"';
+-- END $$;
 
 -- For driver auth (phone OTP):
 -- Authentication > Providers > Enable "Phone" provider (and configure SMS if using Twilio etc for prod)
