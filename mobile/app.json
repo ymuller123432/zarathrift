@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Zara Thrift",
+    "slug": "zarathrift",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "zarathrift",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0a0a0a"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.zarathrift.app"
+    },
+    "android": {
+      "package": "com.zarathrift.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "supabaseUrl": "https://YOUR-PROJECT-REF.supabase.co",
+      "supabaseAnonKey": "YOUR-ANON-KEY-HERE"
+    }
+  }
+}
