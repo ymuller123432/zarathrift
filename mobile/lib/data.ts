@@ -95,6 +95,22 @@ export async function getOrders(): Promise<Order[]> {
 }
 
 export async function getUsers(): Promise<User[]> {
+  if (isUsingSupabase && supabase) {
+    try {
+      const { data } = await supabase.from('users').select('*');
+      if (data && data.length > 0) {
+        return data.map((u: any) => ({
+          id: u.id,
+          firstName: u.first_name,
+          lastName: u.last_name,
+          phone: u.phone,
+          email: u.email,
+          password: u.password,
+          createdAt: u.created_at,
+        }));
+      }
+    } catch (e) { console.warn('Supabase getUsers failed', e); }
+  }
   try {
     const saved = await AsyncStorage.getItem(KEYS.USERS);
     if (saved) {
@@ -120,6 +136,51 @@ export async function getUsers(): Promise<User[]> {
 
 export async function saveUsers(users: User[]) {
   await AsyncStorage.setItem(KEYS.USERS, JSON.stringify(users));
+}
+
+export async function getRegisteredUsers(): Promise<any[]> {
+  if (isUsingSupabase && supabase) {  // assumes supabase and isUsingSupabase imported or global in scope; adjust if needed
+    try {
+      const { data } = await supabase.from('users').select('*');
+      return (data || []).map((u: any) => ({
+        phone: u.phone,
+        name: `${u.first_name} ${u.last_name}`.trim(),
+        email: u.email || '',
+        registeredAt: u.created_at,
+      }));
+    } catch (e) { console.warn('Supabase getRegisteredUsers failed', e); }
+  }
+  try {
+    const saved = await AsyncStorage.getItem(KEYS.USERS);
+    if (!saved) return [];
+    const users = JSON.parse(saved);
+    return users.map((u: any) => ({
+      phone: u.phone,
+      name: `${u.firstName} ${u.lastName}`.trim(),
+      email: u.email || '',
+      registeredAt: u.createdAt,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function saveRegisteredUser(user: any) {
+  if (isUsingSupabase && supabase) {
+    try {
+      await supabase.from('users').upsert({
+        id: user.id,
+        first_name: user.firstName,
+        last_name: user.lastName,
+        phone: user.phone,
+        email: user.email,
+        password: user.password,
+        created_at: user.createdAt,
+      });
+      return;
+    } catch (e) { console.warn('Supabase saveRegisteredUser failed', e); }
+  }
+  // local handled in saveUsers
 }
 
 export async function getDiscounts(): Promise<DiscountCode[]> {

@@ -90,6 +90,12 @@ export async function register(data: {
   await saveUsers(users);
   await saveCurrentUser(newUser);
 
+  // Also save to Supabase users table for admin CRM visibility across devices
+  try {
+    const { saveRegisteredUser } = await import('./data');
+    await saveRegisteredUser(newUser);
+  } catch {}
+
   return { user: newUser };
 }
 
