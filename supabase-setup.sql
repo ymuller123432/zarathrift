@@ -94,28 +94,43 @@ alter table settings enable row level security;
 alter table customers enable row level security;
 alter table discounts enable row level security;
 alter table content enable row level security;
+alter table users enable row level security;
 
 -- Basic demo policies (anon read/write for quick start - secure this in production!)
+-- Use DROP IF EXISTS to make script re-runnable
+DROP POLICY IF EXISTS "Allow anon read products" ON products;
 create policy "Allow anon read products" on products for select using (true);
+DROP POLICY IF EXISTS "Allow anon insert/update products" ON products;
 create policy "Allow anon insert/update products" on products for all using (true);
 
+DROP POLICY IF EXISTS "Allow anon read orders" ON orders;
 create policy "Allow anon read orders" on orders for select using (true);
+DROP POLICY IF EXISTS "Allow anon insert/update orders" ON orders;
 create policy "Allow anon insert/update orders" on orders for all using (true);
 
+DROP POLICY IF EXISTS "Allow anon read settings" ON settings;
 create policy "Allow anon read settings" on settings for select using (true);
+DROP POLICY IF EXISTS "Allow anon insert/update settings" ON settings;
 create policy "Allow anon insert/update settings" on settings for all using (true);
 
--- Similar for others
+DROP POLICY IF EXISTS "Allow anon read customers" ON customers;
 create policy "Allow anon read customers" on customers for select using (true);
+DROP POLICY IF EXISTS "Allow anon insert/update customers" ON customers;
 create policy "Allow anon insert/update customers" on customers for all using (true);
 
+DROP POLICY IF EXISTS "Allow anon read users" ON users;
 create policy "Allow anon read users" on users for select using (true);
+DROP POLICY IF EXISTS "Allow anon insert/update users" ON users;
 create policy "Allow anon insert/update users" on users for all using (true);
 
+DROP POLICY IF EXISTS "Allow anon read discounts" ON discounts;
 create policy "Allow anon read discounts" on discounts for select using (true);
+DROP POLICY IF EXISTS "Allow anon insert/update discounts" ON discounts;
 create policy "Allow anon insert/update discounts" on discounts for all using (true);
 
+DROP POLICY IF EXISTS "Allow anon read content" ON content;
 create policy "Allow anon read content" on content for select using (true);
+DROP POLICY IF EXISTS "Allow anon insert/update content" ON content;
 create policy "Allow anon insert/update content" on content for all using (true);
 
 -- IMPORTANT: Enable Realtime for live driver updates (so driver GPS pushes instantly to customers)
