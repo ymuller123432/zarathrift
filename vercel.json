@@ -4,9 +4,9 @@
   "outputDirectory": ".next",
   "ignore": [
     "mobile/**",
+    "**/mobile/**",
     ".next/**",
     "node_modules/**",
     "supabase-setup.sql"
-  ],
-  "regions": ["iad1"]
+  ]
 }

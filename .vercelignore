@@ -1,0 +1,8 @@
+mobile
+**/mobile/**
+.next
+out
+node_modules
+supabase-setup.sql
+*.log
+.env*
