@@ -12,7 +12,12 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.zarathrift.app"
+      "bundleIdentifier": "com.zarathrift.app",
+      "infoPlist": {
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "We need your location to automatically update customers on your delivery progress in real-time.",
+        "NSLocationWhenInUseUsageDescription": "We need your location to automatically update customers on your delivery progress in real-time.",
+        "UIBackgroundModes": ["location"]
+      }
     },
     "android": {
       "package": "com.zarathrift.app"
