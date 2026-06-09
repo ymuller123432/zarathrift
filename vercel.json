@@ -1,12 +1,5 @@
 {
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "ignore": [
-    "mobile/**",
-    "**/mobile/**",
-    ".next/**",
-    "node_modules/**",
-    "supabase-setup.sql"
-  ]
+  "outputDirectory": ".next"
 }
