@@ -99,6 +99,14 @@ export async function register(data: {
   // Auto-login after registration
   setCurrentUser(newUser);
 
+  // Also register in admin CRM so they can be messaged for marketing (new products/sales)
+  try {
+    // Dynamic import to avoid circular deps
+    import('./data').then(({ saveCustomerNote }) => {
+      saveCustomerNote(normalizedPhone, `${data.firstName} ${data.lastName}`.trim(), '', 0);
+    });
+  } catch {}
+
   return { user: newUser };
 }
 

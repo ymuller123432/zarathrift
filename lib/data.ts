@@ -185,6 +185,23 @@ export async function saveCustomerNote(phone: string, name: string, notes: strin
   localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(customers));
 }
 
+export async function getRegisteredUsers(): Promise<any[]> {
+  if (typeof window === 'undefined') return [];
+  try {
+    const saved = localStorage.getItem('zarathrift_users');
+    if (!saved) return [];
+    const users = JSON.parse(saved);
+    return users.map((u: any) => ({
+      phone: u.phone,
+      name: `${u.firstName} ${u.lastName}`.trim(),
+      email: u.email || '',
+      registeredAt: u.createdAt,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 // ==================== CONTENT (Homepage) ====================
 export async function getContent(): Promise<Record<string, string>> {
   const settings = await getSettings();

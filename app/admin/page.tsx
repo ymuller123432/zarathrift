@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Navbar } from '../../components/Navbar';
 import { Order, Product } from '../../lib/types';
 import { businessConfig } from '../../lib/config';
-import { getProducts, saveProducts, getSettings, saveSettings, generateId, getCustomers, saveCustomerNote, getDiscounts, saveDiscounts, getContent, saveContent, saveOrders, getOrders } from '../../lib/data';
+import { getProducts, saveProducts, getSettings, saveSettings, generateId, getCustomers, saveCustomerNote, getDiscounts, saveDiscounts, getContent, saveContent, saveOrders, getOrders, getRegisteredUsers } from '../../lib/data';
 import { toast } from 'sonner';
 
 export default function AdminPage() {
@@ -92,7 +92,36 @@ export default function AdminPage() {
 
       (async () => {
         const custs = await getCustomers();
-        setCustomers(custs);
+        const regs = await getRegisteredUsers();
+        // Merge: prefer customer data (notes, orders), fallback to registered
+        const merged = regs.map(reg => {
+          const cust = custs.find((c: any) => c.phone === reg.phone);
+          return {
+            ...reg,
+            notes: cust?.notes || '',
+            ordersCount: cust?.ordersCount || 0,
+          };
+        });
+        // Also include any customers not in registered (from old orders)
+        custs.forEach((cust: any) => {
+          if (!merged.some(m => m.phone === cust.phone)) {
+            merged.push({
+              phone: cust.phone,
+              name: cust.name,
+              email: '',
+              registeredAt: '',
+              notes: cust.notes || '',
+              ordersCount: cust.ordersCount || 0,
+            });
+          }
+        });
+        // Sort newest registered first
+        merged.sort((a: any, b: any) => {
+          const da = a.registeredAt ? new Date(a.registeredAt).getTime() : 0;
+          const db = b.registeredAt ? new Date(b.registeredAt).getTime() : 0;
+          return db - da;
+        });
+        setCustomers(merged);
       })();
     }
   }, [isAuthed]);
@@ -1701,17 +1730,33 @@ Thank you for shopping with us!
         {/* CUSTOMERS CRM TAB */}
         {activeTab === 'customers' && (
           <div>
-            <h2 className="text-xl font-semibold mb-4">Customer CRM</h2>
-            <p className="text-xs mb-4">Unique buyers auto-populated from orders. Add private notes.</p>
-            {customers.length === 0 ? <p className="text-[#888]">No customers yet. Place test orders.</p> : (
+            <h2 className="text-xl font-semibold mb-4">Registered Users (for WhatsApp Marketing)</h2>
+            <p className="text-xs mb-4">All registered users (from signup). Use to message about new products or sales. Notes are private CRM.</p>
+            {customers.length === 0 ? <p className="text-[#888]">No registered users yet.</p> : (
               <div className="space-y-3">
                 {customers.map((c: any, i: number) => (
-                  <div key={i} className="bg-[#111] border border-[#222] p-3 text-sm flex justify-between items-start">
-                    <div>
-                      <div>{c.name} ({c.phone}) - {c.ordersCount} orders</div>
-                      <div className="text-xs text-[#888]">Notes: {c.notes || 'None'}</div>
+                  <div key={i} className="bg-[#111] border border-[#222] p-3 text-sm">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-medium">{c.name} ({c.phone})</div>
+                        {c.email && <div className="text-xs text-[#888]">{c.email}</div>}
+                        <div className="text-xs text-[#888]">
+                          {c.registeredAt ? `Registered: ${new Date(c.registeredAt).toLocaleDateString()}` : ''}
+                          {c.ordersCount ? ` • ${c.ordersCount} orders` : ' • No orders yet'}
+                        </div>
+                        <div className="text-xs text-[#888] mt-1">Notes: {c.notes || 'None'}</div>
+                      </div>
+                      <div className="flex flex-col gap-1 items-end">
+                        <a 
+                          href={`https://wa.me/${c.phone.replace(/^0/, '234')}?text=${encodeURIComponent(`Hi ${c.name.split(' ')[0]}, we have new products and special sales at Zara Thrift! Check them out.`)}`}
+                          target="_blank"
+                          className="text-xs px-2 py-0.5 bg-green-600 text-white rounded hover:bg-green-700"
+                        >
+                          Message on WhatsApp
+                        </a>
+                        <button onClick={() => setEditingCustomer(c)} className="text-xs border px-2 py-0.5">Edit Notes</button>
+                      </div>
                     </div>
-                    <button onClick={() => setEditingCustomer(c)} className="text-xs border px-2">Edit Notes</button>
                   </div>
                 ))}
               </div>
@@ -1719,11 +1764,20 @@ Thank you for shopping with us!
 
             {editingCustomer && (
               <div className="mt-4 bg-[#111] border border-[#222] p-4">
-                <input value={editingCustomer.notes} onChange={e => setEditingCustomer({...editingCustomer, notes: e.target.value})} className="border p-2 w-full mb-2" placeholder="Private notes..." />
+                <div className="text-sm mb-2">Editing notes for {editingCustomer.name} ({editingCustomer.phone})</div>
+                <textarea 
+                  value={editingCustomer.notes} 
+                  onChange={e => setEditingCustomer({...editingCustomer, notes: e.target.value})} 
+                  className="border p-2 w-full mb-2 bg-[#0a0a0a] text-sm" 
+                  rows={3}
+                  placeholder="Private notes for marketing / follow-up..." 
+                />
                 <button onClick={() => saveCustomerNoteLocal(editingCustomer.phone, editingCustomer.name, editingCustomer.notes)} className="bg-black text-white px-4 py-1 text-sm">Save Note</button>
                 <button onClick={() => setEditingCustomer(null)} className="ml-2 text-sm">Cancel</button>
               </div>
             )}
+
+            <p className="text-[10px] text-[#666] mt-4">Tip: Click WhatsApp buttons to quickly reach out about new drops or sales. All users who registered (even without buying) are listed here.</p>
           </div>
         )}
 
