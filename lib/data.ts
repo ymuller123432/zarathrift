@@ -189,13 +189,27 @@ export async function getRegisteredUsers(): Promise<any[]> {
   if (isUsingSupabase && supabase) {
     try {
       const { data } = await supabase.from('users').select('*');
-      return (data || []).map((u: any) => ({
+      const supabaseUsers = (data || []).map((u: any) => ({
         phone: u.phone,
         name: `${u.first_name} ${u.last_name}`.trim(),
         email: u.email || '',
         registeredAt: u.created_at,
       }));
-    } catch (e) { console.warn('Supabase getRegisteredUsers failed', e); }
+      // Cache to localStorage so local and Supabase stay in sync
+      if (typeof window !== 'undefined') {
+        const localUsers = supabaseUsers.map(u => ({
+          id: 'user_' + Date.now().toString(36), // placeholder, real id from DB if needed
+          firstName: u.name.split(' ')[0],
+          lastName: u.name.split(' ').slice(1).join(' '),
+          phone: u.phone,
+          email: u.email,
+          createdAt: u.registeredAt,
+          password: '', // not needed for display
+        }));
+        localStorage.setItem('zarathrift_users', JSON.stringify(localUsers));
+      }
+      return supabaseUsers;
+    } catch (e) { console.warn('Supabase getRegisteredUsers failed, falling back to local', e); }
   }
   if (typeof window === 'undefined') return [];
   try {
@@ -214,21 +228,41 @@ export async function getRegisteredUsers(): Promise<any[]> {
 }
 
 export async function saveRegisteredUser(user: any) {
+  // Always write to localStorage for demo/offline support
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('zarathrift_users');
+      let users = saved ? JSON.parse(saved) : [];
+      const localUser = {
+        id: user.id,
+        firstName: user.firstName || user.first_name,
+        lastName: user.lastName || user.last_name,
+        phone: user.phone,
+        email: user.email,
+        password: user.password,
+        createdAt: user.createdAt || user.created_at,
+      };
+      const idx = users.findIndex((u: any) => u.phone === localUser.phone);
+      if (idx >= 0) users[idx] = localUser;
+      else users.push(localUser);
+      localStorage.setItem('zarathrift_users', JSON.stringify(users));
+    } catch (e) { console.warn('Local saveRegisteredUser failed', e); }
+  }
+
   if (isUsingSupabase && supabase) {
     try {
       await supabase.from('users').upsert({
         id: user.id,
-        first_name: user.firstName,
-        last_name: user.lastName,
+        first_name: user.firstName || user.first_name,
+        last_name: user.lastName || user.last_name,
         phone: user.phone,
         email: user.email,
         password: user.password, // demo only
-        created_at: user.createdAt,
+        created_at: user.createdAt || user.created_at,
       });
       return;
     } catch (e) { console.warn('Supabase saveRegisteredUser failed', e); }
   }
-  // local save is handled in auth.ts
 }
 
 // ==================== CONTENT (Homepage) ====================

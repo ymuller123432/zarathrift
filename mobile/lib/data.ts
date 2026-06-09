@@ -139,16 +139,30 @@ export async function saveUsers(users: User[]) {
 }
 
 export async function getRegisteredUsers(): Promise<any[]> {
-  if (isUsingSupabase && supabase) {  // assumes supabase and isUsingSupabase imported or global in scope; adjust if needed
+  if (isUsingSupabase && supabase) {
     try {
       const { data } = await supabase.from('users').select('*');
-      return (data || []).map((u: any) => ({
+      const supabaseUsers = (data || []).map((u: any) => ({
         phone: u.phone,
         name: `${u.first_name} ${u.last_name}`.trim(),
         email: u.email || '',
         registeredAt: u.created_at,
       }));
-    } catch (e) { console.warn('Supabase getRegisteredUsers failed', e); }
+      // Cache to AsyncStorage for offline/demo
+      try {
+        const localUsers = supabaseUsers.map(u => ({
+          id: 'user_' + Date.now().toString(36),
+          firstName: u.name.split(' ')[0],
+          lastName: u.name.split(' ').slice(1).join(' '),
+          phone: u.phone,
+          email: u.email,
+          createdAt: u.registeredAt,
+          password: '',
+        }));
+        await AsyncStorage.setItem(KEYS.USERS, JSON.stringify(localUsers));
+      } catch {}
+      return supabaseUsers;
+    } catch (e) { console.warn('Supabase getRegisteredUsers failed, falling back to local', e); }
   }
   try {
     const saved = await AsyncStorage.getItem(KEYS.USERS);
@@ -166,21 +180,39 @@ export async function getRegisteredUsers(): Promise<any[]> {
 }
 
 export async function saveRegisteredUser(user: any) {
+  // Always write to AsyncStorage for demo/offline
+  try {
+    const saved = await AsyncStorage.getItem(KEYS.USERS);
+    let users = saved ? JSON.parse(saved) : [];
+    const localUser = {
+      id: user.id,
+      firstName: user.firstName || user.first_name,
+      lastName: user.lastName || user.last_name,
+      phone: user.phone,
+      email: user.email,
+      password: user.password,
+      createdAt: user.createdAt || user.created_at,
+    };
+    const idx = users.findIndex((u: any) => u.phone === localUser.phone);
+    if (idx >= 0) users[idx] = localUser;
+    else users.push(localUser);
+    await AsyncStorage.setItem(KEYS.USERS, JSON.stringify(users));
+  } catch (e) { console.warn('Local saveRegisteredUser failed', e); }
+
   if (isUsingSupabase && supabase) {
     try {
       await supabase.from('users').upsert({
         id: user.id,
-        first_name: user.firstName,
-        last_name: user.lastName,
+        first_name: user.firstName || user.first_name,
+        last_name: user.lastName || user.last_name,
         phone: user.phone,
         email: user.email,
         password: user.password,
-        created_at: user.createdAt,
+        created_at: user.createdAt || user.created_at,
       });
       return;
     } catch (e) { console.warn('Supabase saveRegisteredUser failed', e); }
   }
-  // local handled in saveUsers
 }
 
 export async function getDiscounts(): Promise<DiscountCode[]> {
