@@ -6,35 +6,55 @@
     "orientation": "portrait",
     "scheme": "zarathrift",
     "userInterfaceStyle": "dark",
+    "icon": "./assets/icon.png",
     "splash": {
       "backgroundColor": "#0a0a0a"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.zarathrift.app",
       "infoPlist": {
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "We need your location to automatically update customers on your delivery progress in real-time.",
-        "NSLocationWhenInUseUsageDescription": "We need your location to automatically update customers on your delivery progress in real-time.",
-        "UIBackgroundModes": ["location"]
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app collects your precise location in the background so drivers can share live GPS updates with customers during delivery. Location is only used when you are actively tracking an assigned order as a driver.",
+        "NSLocationWhenInUseUsageDescription": "This app collects your location to share live delivery progress with customers. Location access is only required when you start tracking an order as a driver.",
+        "UIBackgroundModes": [
+          "location"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.zarathrift.app"
+      "package": "com.zarathrift.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "icon": "./assets/icon.png"
     },
     "web": {
       "bundler": "metro",
       "output": "static"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "This app collects your precise location in the background so drivers can share live GPS updates with customers during delivery. Location is only used when you are actively tracking an assigned order as a driver.",
+          "locationWhenInUsePermission": "This app collects your location to share live delivery progress with customers. Location access is only required when you start tracking an order as a driver."
+        }
+      ]
     ],
     "extra": {
       "router": {
         "origin": false
       },
-      "supabaseUrl": "https://YOUR-PROJECT-REF.supabase.co",
-      "supabaseAnonKey": "YOUR-ANON-KEY-HERE"
+      "eas": {
+        "projectId": "b7f3dc1f-e26b-4cb7-b8e2-9f91fe195ddf"
+      }
     }
   }
 }
